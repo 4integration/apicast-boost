@@ -32,9 +32,11 @@ objects:
                 key: password
           - name: THREESCALE_CONFIG_FILE
             value: "${CONFIGURATION_FILE_PATH}"
+          - name: THREESCALE_DEPLOYMENT_ENV
+            value: "${DEPLOYMENT_ENVIRONMENT}"
           - name: RESOLVER
             value: "${RESOLVER}"
-          - name: APICAST_SERVICES
+          - name: APICAST_SERVICES_LIST
             value: "${SERVICES_LIST}"
           - name: APICAST_CONFIGURATION_LOADER
             value: "${CONFIGURATION_LOADER}"
@@ -42,7 +44,7 @@ objects:
             value: "${BACKEND_CACHE_HANDLER}"
           - name: APICAST_LOG_LEVEL
             value: "${LOG_LEVEL}"
-          - name: APICAST_PATH_ROUTING_ENABLED
+          - name: APICAST_PATH_ROUTING
             value: "${PATH_ROUTING}"
           - name: APICAST_RESPONSE_CODES
             value: "${RESPONSE_CODES}"
@@ -112,6 +114,10 @@ parameters:
 - description: "Docker image to use."
   value: 'quay.io/3scale/apicast:master'
   name: IMAGE_NAME
+- description: "Deployment environment. Can be sandbox or production."
+  value: production
+  name: DEPLOYMENT_ENVIRONMENT
+  required: true
 - description: "Name for the 3scale API Gateway"
   value: apicast
   name: APICAST_NAME
