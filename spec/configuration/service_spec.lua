@@ -1,4 +1,4 @@
-local Service = require 'configuration.service'
+local Service = require 'apicast.configuration.service'
 
 describe('Service object', function()
   describe(':credentials', function()
@@ -158,5 +158,42 @@ describe('Service object', function()
       end)
     end)
 
+  end)
+
+  describe(':oauth()', function()
+    describe('backend_version=oauth', function()
+      it('returns OIDC object when there is OIDC config', function()
+        local service = Service.new({authentication_method = 'oidc', oidc = { issuer = 'http://example.com' }})
+
+        local oauth = service:oauth()
+
+        assert.equal('http://example.com', oauth.issuer)
+      end)
+
+      it('returns APIcast OAuth object when there is no OIDC config', function()
+        local service = Service.new({backend_version = 'oauth', oidc = { }})
+
+        local oauth = service:oauth()
+
+        assert.truthy(oauth.router)
+      end)
+
+    end)
+  end)
+
+  describe(':get_usage', function()
+    describe('when the old and deprecated extract_usage method is defined', function()
+      it('is called. To keep backwards compatibility', function()
+        local service = Service.new({
+          extract_usage = function() return 42 end
+        })
+
+        -- Used in the code, need to initialize it.
+        ngx.var = { request = 'GET /' }
+
+        local usage = service:get_usage('GET', '/')
+        assert.equal(42, usage)
+      end)
+    end)
   end)
 end)

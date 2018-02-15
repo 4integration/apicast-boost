@@ -1,4 +1,4 @@
-local util = require 'util'
+local util = require 'apicast.util'
 
 describe('util',function()
   describe('system', function()
@@ -27,6 +27,16 @@ describe('util',function()
       local stdout, stderr = system('(>&2 echo error) && echo progress && false')
       assert.equal('error\n', stderr)
       assert.equal('progress\n', stdout)
+    end)
+  end)
+
+  describe('to_hash', function()
+    it("returns empty table", function()
+      assert.same({}, util.to_hash())
+    end)
+
+    it("converts array to hash", function()
+      assert.same({ a = true, b = true }, util.to_hash({'a', 'b'}))
     end)
   end)
 end)

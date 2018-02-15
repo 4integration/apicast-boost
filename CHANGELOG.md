@@ -4,7 +4,229 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/) 
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
-## [Unreleased]
+## Unreleased
+
+## Added
+
+- Definition of JSON schemas for policy configurations [PR #522](https://github.com/3scale/apicast/pull/522)
+- URL rewriting policy [PR #529](https://github.com/3scale/apicast/pull/529)
+- Liquid template can find files in current folder too [PR #533](https://github.com/3scale/apicast/pull/533)
+- `bin/apicast` respects `APICAST_OPENRESTY_BINARY` and `TEST_NGINX_BINARY` environment [PR #540](https://github.com/3scale/apicast/pull/540)
+- Caching policy [PR #546](https://github.com/3scale/apicast/pull/546), [PR #558](https://github.com/3scale/apicast/pull/558)
+- New phase: `content` for generating content or getting the upstream response [PR #535](https://github.com/3scale/apicast/pull/535)
+- Upstream policy [PR #562](https://github.com/3scale/apicast/pull/562)
+- Policy JSON manifest [PR #565](https://github.com/3scale/apicast/pull/565)
+- SOAP policy [PR #567](https://github.com/3scale/apicast/pull/567)
+- Ability to set custom directories to load policies from [PR #581](https://github.com/3scale/apicast/pull/581)
+- CLI is running with proper log level set by `APICAST_LOG_LEVEL` [PR #585](https://github.com/3scale/apicast/pull/585)
+- 3scale configuration (staging/production) can be passed as `-3` or `--channel` on the CLI [PR #590](https://github.com/3scale/apicast/pull/590)
+- APIcast CLI loads environments defined by `APICAST_ENVIRONMENT` variable [PR #590](https://github.com/3scale/apicast/pull/590)
+- Endpoint in management API to retrieve all the JSON manifests of the policies [PR #592](https://github.com/3scale/apicast/pull/592)
+- Development environment (`--dev`) starts with Echo policy unless some configuration is passed [PR #593](https://github.com/3scale/apicast/pull/593)
+- Added support for passing whole configuration as Data URL [PR #593](https://github.com/3scale/apicast/pull/593)
+- More complete global environment when loading environment policies [PR #596](https://github.com/3scale/apicast/pull/596)
+
+## Fixed
+
+- Detecting local rover installation from the CLI [PR #519](https://github.com/3scale/apicast/pull/519)
+- Use more `command` instead of `which` to work in plain shell [PR #521](https://github.com/3scale/apicast/pull/521)
+- Fixed rockspec so APIcast can be installed by luarocks [PR #523](https://github.com/3scale/apicast/pull/523), [PR #538](https://github.com/3scale/apicast/pull/538)
+- Fix loading renamed APIcast code [PR #525](https://github.com/3scale/apicast/pull/525)
+- Fix `apicast` command when installed from luarocks [PR #527](https://github.com/3scale/apicast/pull/527)
+- Fix lua docs formatting in the CORS policy [PR #530](https://github.com/3scale/apicast/pull/530)
+- `post_action` phase not being called in the policy_chain [PR #539](https://github.com/3scale/apicast/pull/539)
+- Failing to execute `libexec/boot` on some systems [PR #544](https://github.com/3scale/apicast/pull/544)
+- Detect number of CPU cores in containers by using `nproc` [PR #554](https://github.com/3scale/apicast/pull/554)
+- Running with development config in Docker [PR #555](https://github.com/3scale/apicast/pull/555)
+- Fix setting twice the headers in a pre-flight request in the CORS policy [PR #570](https://github.com/3scale/apicast/pull/570)
+- Fix case where debug headers are returned without enabling the option [PR #577](https://github.com/3scale/apicast/pull/577)
+- Fix errors loading openresty libraries when rover is active [PR #598](https://github.com/3scale/apicast/pull/598)
+
+## Changed
+
+- Consolidate apicast-0.1-0.rockspec into apicast-scm-1.rockspec [PR #526](https://github.com/3scale/apicast/pull/526)
+- Deprecated `Configuration.extract_usage` in favor of `Service.get_usage` [PR #531](https://github.com/3scale/apicast/pull/531)
+- Extract Test::APIcast to own package on CPAN [PR #528](https://github.com/3scale/apicast/pull/528)
+- Load policies by the APIcast loader instead of changing load path [PR #532](https://github.com/3scale/apicast/pull/532), [PR #536](https://github.com/3scale/apicast/pull/536)
+- Add `src` directory to the Lua load path when using CLI [PR #533](https://github.com/3scale/apicast/pull/533)
+- Move rejection reason parsing from CacheHandler to Proxy [PR #541](https://github.com/3scale/apicast/pull/541)
+- Propagate full package.path and cpath from the CLI to Nginx [PR #538](https://github.com/3scale/apicast/pull/538)
+- `post_action` phase now shares `ngx.ctx` with the main request [PR #539](https://github.com/3scale/apicast/pull/539)
+- Decrease nginx timer resolution to improve performance and enable PCRE JIT [PR #543](https://github.com/3scale/apicast/pull/543)
+- Moved `proxy_pass` into new internal location `@upstream` [PR #535](https://github.com/3scale/apicast/pull/535)
+- Split 3scale authorization to rewrite and access phase [PR #556](https://github.com/3scale/apicast/pull/556)
+- Extract `mapping_rule` module from the `configuration` module [PR #571](https://github.com/3scale/apicast/pull/571)
+- Renamed `apicast/policy/policy.lua` to `apicast/policy.lua` [PR #569](https://github.com/3scale/apicast/pull/569)
+- Sandbox loading policies [PR #566](https://github.com/3scale/apicast/pull/566)
+- Extracted `usage` and `mapping_rules_matcher` modules so they can be used from policies [PR #580](https://github.com/3scale/apicast/pull/580)
+- Renamed all `apicast/policy/*/policy.lua` to `apicast/policy/*/init.lua` to match Lua naming [PR #579](https://github.com/3scale/apicast/pull/579)
+- Environment configuration can now define the configuration loader or cache [PR #590](https://github.com/3scale/apicast/pull/590).
+- APIcast starts with "boot" configuration loader by default (because production is the default environment) [PR #590](https://github.com/3scale/apicast/pull/590).
+
+## [3.2.0-alpha2] - 2017-11-30
+
+## Added
+
+- New policy chains system. This allows users to write custom policies to configure what Apicast can do on each of the Nginx phases [PR #450](https://github.com/3scale/apicast/pull/450)
+- Resolver can resolve nginx upstreams [PR #478](https://github.com/3scale/apicast/pull/478)
+- Add `resolver` directive in the nginx configuration [PR #508](https://github.com/3scale/apicast/pull/508)
+- Calls 3scale backend with the 'no_body' option enabled. This reduces network traffic in cases where APIcast does not need to parse the response body [PR #483](https://github.com/3scale/apicast/pull/483)
+- Methods to modify policy chains [PR #505](https://github.com/3scale/apicast/pull/505)
+- Ability to load several environment configurations [PR #504](https://github.com/3scale/apicast/pull/504)
+- Ability to configure policy chain from the environment configuration [PR #496](https://github.com/3scale/apicast/pull/496)
+- Load environment variables defined in the configuration [PR #507](https://github.com/3scale/apicast/pull/507)
+- Allow configuration of the echo/management/fake backend ports [PR #506](https://github.com/3scale/apicast/pull/506)
+- Headers policy [PR #497](https://github.com/3scale/apicast/pull/497)
+- CORS policy [PR #487](https://github.com/3scale/apicast/pull/487)
+
+## Changed
+
+- Namespace all APIcast code in `apicast` folder. Possible BREAKING CHANGE for some customizations. [PR #486](https://github.com/3scale/apicast/pull/486)
+- CLI ignores environment variables that are empty strings [PR #504](https://github.com/3scale/apicast/pull/504)
+
+## Fixed
+
+- Loading installed luarocks from outside rover [PR #503](https://github.com/3scale/apicast/pull/503)
+- Support IPv6 addresses in `/etc/resolv.conf` [PR #511](https://github.com/3scale/apicast/pull/511)
+- Fix possible 100% CPU usage when starting APIcast and manipulating filesystem [PR #547](https://github.com/3scale/apicast/pull/547)
+
+## [3.2.0-alpha1]
+
+## Added
+
+- Experimental option for true out of band reporting (`APICAST_REPORTING_WORKERS`) [PR #290](https://github.com/3scale/apicast/pull/290)
+- `/status/info` endpoint to the Management API [PR #290](https://github.com/3scale/apicast/pull/290)
+- `/_threescale/healthz` endpoint returns a success status code, this is used for health checking in kubernetes environments [PR #285](https://github.com/3scale/apicast/pull/285)
+- Usage limit errors are now configurable to distinguish them from other authorization errors [PR #453](https://github.com/3scale/apicast/pull/453).
+- Templating nginx configuration with liquid. [PR #449](https://github.com/3scale/apicast/pull/449)
+
+## Changed
+
+- Upgraded to OpenResty 1.11.2.5-1 [PR #428](https://github.com/3scale/apicast/pull/428)
+- `/oauth/token` endpoint returns an error status code, when the access token couldn't be stored in 3scale backend [PR #436](https://github.com/3scale/apicast/pull/436)]
+- URI params in POST requests are now taken into account when matching mapping rules [PR #437](https://github.com/3scale/apicast/pull/437)
+- Increased number of background timers and connections in the cosocket pool [PR #290](https://github.com/3scale/apicast/pull/290)
+- Make OAuth tokens TTL configurable [PR #448](https://github.com/3scale/apicast/pull/448)
+- Detect when being executed in Test::Nginx and use default backend accordingly [PR #458](https://github.com/3scale/apicast/pull/458)
+- Update the s2i-openresty image to have the same path (`/opt/app-root/src`) in all images [PR #460](https://github.com/3scale/apicast/pull/460)
+- Launcher scripts are now Perl + Lua instead of Shell [PR #449](https://github.com/3scale/apicast/pull/449)
+- Unify how to connect to 3scale backend [PR #456](https://github.com/3scale/apicast/pull/456)
+- Upgraded OpenResty to 1.13.6.1 [PR #480](https://github.com/3scale/apicast/pull/480)
+
+### Fixed
+
+- Request headers are not passed to the backend, preventing sending invalid Content-Type to the access token store endpoint [PR #433](https://github.com/3scale/apicast/pull/433)
+- Live and ready endpoints now set correct Content-Type header in the response[PR #441](https://github.com/3scale/apicast/pull/441)
+
+## [3.1.0] - 2017-10-27
+- 3.1.0-rc2 was considered final and became 3.1.0.
+
+## [3.1.0-rc2] - 2017-09-29
+
+### Fixed
+
+- Request headers are not passed to the backend, preventing sending invalid Content-Type to the access token store endpoint [PR #433](https://github.com/3scale/apicast/pull/433)
+
+## [3.1.0-rc1] - 2017-09-14
+
+### Added
+
+- Support for extending APIcast location block with snippets of nginx configuration [PR #407](https://github.com/3scale/apicast/pull/407)
+
+### Fixed
+
+- Crash on empty OIDC Issuer endpoint [PR #408](https://github.com/3scale/apicast/pull/408)
+- Handle partial credentials [PR #409](https://github.com/3scale/apicast/pull/409)
+- Crash when configuration endpoint was missing [PR #417](https://github.com/3scale/apicast/pull/417)
+- Fix double queries to not fully qualified domains [PR #419](https://github.com/3scale/apicast/pull/419)
+- Fix caching DNS queries with scope (like on OpenShift) [PR #420](https://github.com/3scale/apicast/pull/420)
+
+### Changed
+
+- `THREESCALE_DEPLOYMENT_ENV` defaults to `production` [PR #406](https://github.com/3scale/apicast/pull/406)
+- OIDC is now used based on settings on the API Manager [PR #405](https://github.com/3scale/apicast/pull/405)
+- No limit on body size from the client sent to the server [PR #410](https://github.com/3scale/apicast/pull/410)
+- Print module loading errors only when it failed to load [PR #415](https://github.com/3scale/apicast/pull/415)
+- `bin/busted` rewritten to support different working directories [PR #418](https://github.com/3scale/apicast/pull/418)
+- dnsmasq started in docker will not forward queries without domain [PR #421](https://github.com/3scale/apicast/pull/421)
+
+## [3.1.0-beta2] - 2017-08-21
+
+### Added
+
+- Ability to configure how to cache backend authorizations [PR #396](https://github.com/3scale/apicast/pull/396)
+
+### Fixed
+
+- [THREESCALE-281](https://issues.jboss.org/browse/THREESCALE-281) Not loading services when APICAST\_SERVICES is empty [PR #401](https://github.com/3scale/apicast/pull/401)
+
+## [3.1.0-beta1] - 2017-07-21
+
+### Fixed
+
+- Fixed CVE-2017-7512 [PR #393](https://github.com/3scale/apicast/pull/392)
+
+### Changed
+
+- APIcast module `balancer` method now accepts optional balancer [PR #362](https://github.com/3scale/apicast/pull/362)
+- Extracted lua-resty-url [PR #384](https://github.com/3scale/apicast/pull/384)
+- Extracted lua-resty-env [PR #386](https://github.com/3scale/apicast/pull/386)
+- Do not load all services when APICAST\_SERVICES is set [PR #388](https://github.com/3scale/apicast/pull/388)
+
+### Added
+
+- APIcast published to [luarocks.org](https://luarocks.org/modules/3scale/apicast) [PR #366](https://github.com/3scale/apicast/pull/366)
+- Support for passing remote configuratio URL through the CLI [PR #389](https://github.com/3scale/apicast/pull/389)
+- CLI flag -b to load configuration on boot [PR #389](https://github.com/3scale/apicast/pull/389)
+- OIDC support [PR #382](https://github.com/3scale/apicast/pull/382)
+
+### Removed
+
+- Keycloak / RH SSO integration replaced with OIDC [PR #382](https://github.com/3scale/apicast/pull/382)
+
+## [3.1.0-alpha1] - 2017-05-05
+
+### Changed
+
+- Bump OpenResty version to [1.11.2.3](https://github.com/3scale/s2i-openresty/releases/tag/1.11.2.3-1) [PR #359](https://github.com/3scale/apicast/pull/359) 
+- Upgraded lua-resty-http and lua-resty-jwt [PR #361](https://github.com/3scale/apicast/pull/361)
+
+### Added
+
+- Experimental caching proxy to the http client [PR #357](https://github.com/3scale/apicast/pull/357)
+
+### Changed
+
+- Print better errors when module loading fails [PR #360](https://github.com/3scale/apicast/pull/360)
+
+## [3.0.0] - 2017-04-04
+
+### Added
+
+- Support for loading configration from custom URL [PR #323](https://github.com/3scale/apicast/pull/323)
+- Turn on SSL/TLS validation by `OPENSSL_VERIFY` environment variable [PR #332](https://github.com/3scale/apicast/pull/332)
+- Load trusted CA chain certificates [PR #332](https://github.com/3scale/apicast/pull/332)
+- Support HTTP Basic authentication for client credentials when authorizing with RH-SSO [PR #336](https://github.com/3scale/apicast/pull/336)
+- Show more information about the error when the module load fails [PR #348](https://github.com/3scale/apicast/pull/348)
+
+### Changed
+
+- Use `RESOLVER` before falling back to `resolv.conf` [PR #324](https://github.com/3scale/apicast/pull/324)
+- Improve error logging when failing to download configuration [PR #335](https://github.com/3scale/apicast/pull/325)
+- Service hostnames are normalized to lower case [PR #336](https://github.com/3scale/apicast/pull/326)
+- Don't attempt to perform post\_action when request was handled without authentication [PR #343](https://github.com/3scale/apicast/pull/343)
+- Store authorization responses with a ttl, if sent [PR #341](https://github.com/3scale/apicast/pull/341)
+
+### Fixed
+
+- Do not return stale service configuration when new one is available [PR #333](https://github.com/3scale/apicast/pull/333)
+- Memory leak in every request [PR #339](https://github.com/3scale/apicast/pull/339)
+- Remove unnecessary code and comments [PR #344](https://github.com/3scale/apicast/pull/344)
+- JWT expiry not taken into account in authorization response cache [PR #283](https://github.com/3scale/apicast/pull/283) / [Issue #309](https://github.com/3scale/apicast/issues/309) / Fixed by [PR #341](https://github.com/3scale/apicast/pull/341)
+- Memory leak in round robin balancer [PR #345](https://github.com/3scale/apicast/pull/345)
+- Error when trying to determine status of failed request when downloading configuration [PR #350](https://github.com/3scale/apicast/pull/350)
+
+## [3.0.0-beta3] - 2017-03-20
 
 ### Changed
 
@@ -19,6 +241,12 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 - Ability to lock service to specific configuration version [PR #293](https://github.com/3scale/apicast/pull/292)
 - Ability to use Redis DB and password via `REDIS_URL` [PR #303](https://github.com/3scale/apicast/pull/303)
 - Ability to Authenticate against API using RHSSO and OpenID Connect [PR #283](https://github.com/3scale/apicast/pull/283)
+
+### Fixed
+- `http_ng` client supports auth passsed in the url, and default client options if the request options are missing for methods with body (POST, PUT, etc.) [PR #310](https://github.com/3scale/apicast/pull/310)
+- Fixed lazy configuration loader to recover from failures [PR #313](https://github.com/3scale/apicast/pull/313)
+- Fixed undefined variable `p` in post\_action [PR #316](https://github.com/3scale/apicast/pull/316)
+- Fixed caching of negative ttl by dnsmasq [PR #318](https://github.com/3scale/apicast/pull/318)
 
 ### Removed
 
@@ -100,9 +328,19 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ### Changed
 - Major rewrite using JSON configuration instead of code generation.
 
-[Unreleased]: https://github.com/3scale/apicast/compare/v2.0.0...HEAD
+[Unreleased]: https://github.com/3scale/apicast/compare/v3.2.0-alpha2...HEAD
 [2.0.0]: https://github.com/3scale/apicast/compare/v0.2...v2.0.0
 [3.0.0-alpha1]: https://github.com/3scale/apicast/compare/v2.0.0...v3.0.0-alpha1
 [3.0.0-alpha2]: https://github.com/3scale/apicast/compare/v3.0.0-alpha1...v3.0.0-alpha2
 [3.0.0-beta1]: https://github.com/3scale/apicast/compare/v3.0.0-alpha2...v3.0.0-beta1
 [3.0.0-beta2]: https://github.com/3scale/apicast/compare/v3.0.0-beta1...v3.0.0-beta2
+[3.0.0-beta3]: https://github.com/3scale/apicast/compare/v3.0.0-beta2...v3.0.0-beta3
+[3.0.0]: https://github.com/3scale/apicast/compare/v3.0.0-beta3...v3.0.0
+[3.1.0-alpha1]: https://github.com/3scale/apicast/compare/v3.0.0...v3.1.0-alpha1
+[3.1.0-beta1]: https://github.com/3scale/apicast/compare/v3.1.0-alpha1...v3.1.0-beta1
+[3.1.0-beta2]: https://github.com/3scale/apicast/compare/v3.1.0-beta1...v3.1.0-beta2
+[3.1.0-rc1]: https://github.com/3scale/apicast/compare/v3.1.0-beta2...v3.1.0-rc1
+[3.1.0-rc2]: https://github.com/3scale/apicast/compare/v3.1.0-rc1...v3.1.0-rc2
+[3.1.0]: https://github.com/3scale/apicast/compare/v3.1.0-rc2...v3.1.0
+[3.2.0-alpha1]: https://github.com/3scale/apicast/compare/v3.1.0...v3.2.0-alpha1
+[3.2.0-alpha2]: https://github.com/3scale/apicast/compare/v3.2.0-alpha1...v3.2.0-alpha2

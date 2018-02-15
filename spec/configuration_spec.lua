@@ -1,4 +1,4 @@
-local configuration = require 'configuration'
+local configuration = require 'apicast.configuration'
 local env = require 'resty.env'
 
 describe('Configuration object', function()
@@ -25,15 +25,70 @@ describe('Configuration object', function()
       assert.same('example.com', config.hostname_rewrite)
     end)
 
-    it('overrides backend endpoint from ENV', function()
-      env.set('BACKEND_ENDPOINT_OVERRIDE', 'https://backend.example.com')
 
-      local config = configuration.parse_service({ proxy = {
-        backend = { endpoint = 'http://example.com', host = 'foo.example.com' }
-      }})
+    it('has a default message, content-type, and status for the auth failed error', function()
+      local config = configuration.parse_service({})
 
-      assert.same('https://backend.example.com', config.backend.endpoint)
-      assert.same('backend.example.com', config.backend.host)
+      assert.same('Authentication failed', config.error_auth_failed)
+      assert.same('text/plain; charset=utf-8', config.auth_failed_headers)
+      assert.equals(403, config.auth_failed_status)
+    end)
+
+    it('has a default message, content-type, and status for the missing creds error', function()
+      local config = configuration.parse_service({})
+
+      assert.same('Authentication parameters missing', config.error_auth_missing)
+      assert.same('text/plain; charset=utf-8', config.auth_missing_headers)
+      assert.equals(401, config.auth_missing_status)
+    end)
+
+    it('has a default message, content-type, and status for the no rules matched error', function()
+      local config = configuration.parse_service({})
+
+      assert.same('No Mapping Rule matched', config.error_no_match)
+      assert.same('text/plain; charset=utf-8', config.no_match_headers)
+      assert.equals(404, config.no_match_status)
+    end)
+
+    it('has a default message, content-type, and status for the limits exceeded error', function()
+      local config = configuration.parse_service({})
+
+      assert.same('Limits exceeded', config.error_limits_exceeded)
+      assert.same('text/plain; charset=utf-8', config.limits_exceeded_headers)
+      assert.equals(429, config.limits_exceeded_status)
+    end)
+
+    describe('backend', function()
+      it('defaults to fake backend', function()
+        local config = configuration.parse_service({ proxy = {
+          backend = nil
+        }})
+
+        assert.same('http://127.0.0.1:8081', config.backend.endpoint)
+        assert.falsy(config.backend.host)
+      end)
+
+      it('is overriden from ENV', function()
+        env.set('BACKEND_ENDPOINT_OVERRIDE', 'https://backend.example.com')
+
+        local config = configuration.parse_service({ proxy = {
+          backend = { endpoint = 'http://example.com', host = 'foo.example.com' }
+        }})
+
+        assert.same('https://backend.example.com', config.backend.endpoint)
+        assert.same('backend.example.com', config.backend.host)
+      end)
+
+      it('detects TEST_NGINX_SERVER_PORT', function()
+        env.set('TEST_NGINX_SERVER_PORT', '1954')
+
+        local config = configuration.parse_service({ proxy = {
+          backend = nil
+        }})
+
+        assert.same('http://127.0.0.1:1954', config.backend.endpoint)
+        assert.falsy(config.backend.host)
+      end)
     end)
   end)
 

@@ -14,9 +14,24 @@
           "endpoint": "http://127.0.0.1:8081",
           "host": "echo"
         },
+        "policy_chain": [
+          { "name": "apicast.policy.apicast" }
+        ],
         "proxy_rules": [
           {
             "http_method": "GET",
+            "pattern": "/",
+            "metric_system_name": "hits",
+            "delta": 1
+          },
+          {
+            "http_method": "POST",
+            "pattern": "/",
+            "metric_system_name": "hits",
+            "delta": 1
+          },
+          {
+            "http_method": "PUT",
             "pattern": "/",
             "metric_system_name": "hits",
             "delta": 1

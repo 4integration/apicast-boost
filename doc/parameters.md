@@ -2,7 +2,7 @@
 
 APIcast v2 has a number of parameters configured as [environment variables](#environment-variables) that can modify the behavior of the gateway. The following reference provides descriptions of these parameters.
 
-Note that when deploying APIcast v2 with OpenShift, some of thee parameters can be configured via OpenShift template parameters. The latter can be consulted directly in the [template](https://raw.githubusercontent.com/3scale/apicast/master/openshift/apicast-template.yml).
+Note that when deploying APIcast v2 with OpenShift, some of these parameters can be configured via OpenShift template parameters. The latter can be consulted directly in the [template](https://raw.githubusercontent.com/3scale/apicast/master/openshift/apicast-template.yml).
 
 ## Environment variables
 
@@ -14,7 +14,7 @@ Defines the name of the Lua module that implements custom logic overriding the e
 
 **Default:** _stderr_
 
-Defines the file that will store the OpenResty error log. It is used by `bin/apicast` in the `error_log` directive. Refer to [NGINX documentation](http://nginx.org/en/docs/ngx_core_module.html#error_log) for more information. The file pathcan be either absolute, or relative to the prefix directory (`apicast` by default) 
+Defines the file that will store the OpenResty error log. It is used by `bin/apicast` in the `error_log` directive. Refer to [NGINX documentation](http://nginx.org/en/docs/ngx_core_module.html#error_log) for more information. The file path can be either absolute, or relative to the prefix directory (`apicast` by default) 
 
 ### `APICAST_LOG_LEVEL`
 
@@ -29,8 +29,17 @@ Specifies the log level for the OpenResty logs.
 **Default:** lazy
 
 Defines how to load the configuration.
-Boot will require configuration when the gateway starts.
-Lazy will load it on demand on incoming request.
+Boot will request the configuration to the API manager when the gateway starts.
+Lazy will load it on demand for each incoming request (to guarantee a complete refresh on each request `APICAST_CONFIGURATION_CACHE` should be 0).
+
+### `APICAST_BACKEND_CACHE_HANDLER`
+
+**Values:** strict | resilient
+**Default:** strict
+
+Defines how the authorization cache behaves when backend is unavailable.
+Strict will remove cached application when backend is unavailable.
+Resilient will do so only on getting authorization denied from backend.
 
 ### `APICAST_MODULE`
 
@@ -55,12 +64,12 @@ When this parameter is set to _true_, the gateway will use path-based routing in
 **Default:** \<empty\> (_false_)
 
 When set to _true_, APIcast will log the response code of the response returned by the API backend in 3scale. In some plans this information can later be consulted from the 3scale admin portal.
-Find more information about the Response Codes feature on the [3scale support site](https://support.3scale.net/docs/analytics/response-codes-tracking).
+Find more information about the Response Codes feature on the [3scale support site](https://access.redhat.com/documentation/en-us/red_hat_3scale/2.saas/html/analytics/response-codes-tracking).
 
 ### `APICAST_SERVICES`
 **Value:** a comma-separated list of service IDs
 
-Used to filter the services configured in the 3scale API Manager, and only use the configuration for specific services in the gateway, discarding those services IDs of which are not specified in the list.
+Used to filter the services configured in the 3scale API Manager, and only use the configuration for specific services in the gateway, discarding those services' IDs that are not specified in the list.
 Service IDs can be found on the **Dashboard > APIs** page, tagged as _ID for API calls_.
 
 ### `APICAST_CONFIGURATION_CACHE`
@@ -68,25 +77,32 @@ Service IDs can be found on the **Dashboard > APIs** page, tagged as _ID for API
 **Values:** _a number > 60_  
 **Default:** 0
 
-Specifies the interval (in seconds) that will be the configuration stored for. The value should be set to 0 or more than 60. For example, if `APICAST_CONFIGURATION_CACHE` is set to 120, the gateway will reload the configuration every 2 minutes (120 seconds).
+Specifies the interval (in seconds) that the configuration will be stored for. The value should be set to 0 (not compatible with boot value of `APICAST_CONFIGURATION_LOADER`) or more than 60. For example, if `APICAST_CONFIGURATION_CACHE` is set to 120, the gateway will reload the configuration from the API manager every 2 minutes (120 seconds).
 
 ### `REDIS_HOST`
 
 **Default:** "127.0.0.1"
 
-APIcast requires a running Redis instance for OAuth 2.0 flow. `REDIS_HOST` parameter is used to set the hostname of the IP of the Redis instance.
+APIcast requires a running Redis instance for OAuth 2.0 Authorization code flow. `REDIS_HOST` parameter is used to set the hostname of the IP of the Redis instance.
 
 ### `REDIS_PORT`
 
 **Default:** 6379
 
-APIcast requires a running Redis instance for OAuth 2.0 flow. `REDIS_PORT` parameter can be used to set the port of the Redis instance.
+APIcast requires a running Redis instance for OAuth 2.0 Authorization code flow. `REDIS_PORT` parameter can be used to set the port of the Redis instance.
 
 ### `REDIS_URL`
 
 **Default:** no value
 
-APIcast requires a running Redis instance for OAuth 2.0 flow. `REDIS_URL` parameter can be used to set the full URI as DSN format like: `redis://PASSWORD@HOST:PORT/DB`. Takes precedence over `REDIS_PORT` and `REDIS_URL`.
+APIcast requires a running Redis instance for OAuth 2.0 Authorization code flow. `REDIS_URL` parameter can be used to set the full URI as DSN format like: `redis://PASSWORD@HOST:PORT/DB`. Takes precedence over `REDIS_PORT` and `REDIS_HOST`.
+
+### `APICAST_OAUTH_TOKENS_TTL`
+
+**Values:** _a number_
+**Default:** 604800
+
+When configured to authenticate using OAuth, this param specifies the TTL (in seconds) of the tokens created.
 
 ### `RESOLVER`
 
@@ -94,11 +110,16 @@ Allows to specify a custom DNS resolver that will be used by OpenResty. If the `
 
 ### `THREESCALE_DEPLOYMENT_ENV`
 
-The value of this environment variable will be used in the header `X-3scale-User-Agent` in the authorize/report requests made to 3scale Service Management API. It is used by 3scale just for statistics.
+**Values:** staging | production
+**Default:** production
+
+The value of this environment variable will be used to define the environment for which the configuration will be downloaded from 3scale (Staging or Production), when using new APIcast.
+
+The value will also be used in the header `X-3scale-User-Agent` in the authorize/report requests made to 3scale Service Management API. It is used by 3scale just for statistics.
 
 ### `THREESCALE_PORTAL_ENDPOINT`
 
-URI that includes your password and portal endpoint in following format: `<schema>://<password>@<admin-portal-domain>`. The `<password>` can be either the [provider key](https://support.3scale.net/docs/terminology#apikey) or an [access token](https://support.3scale.net/docs/terminology#tokens) for the 3scale Account Management API. `<admin-portal-domain>` is the URL used to log into the admin portal.
+URI that includes your password and portal endpoint in the following format: `<schema>://<password>@<admin-portal-domain>`. The `<password>` can be either the [provider key](https://support.3scale.net/docs/terminology#apikey) or an [access token](https://support.3scale.net/docs/terminology#tokens) for the 3scale Account Management API. `<admin-portal-domain>` is the URL used to log into the admin portal.
 
 **Example**: `https://access-token@account-admin.3scale.net`.
 
@@ -137,10 +158,46 @@ You should enable the debug level only for debugging.
 
 Replace `${ID}` with the actual Service ID. The value should be the configuration version you can see in the configuration history on the Admin Portal.
 
-Setting it to particual version will make it not auto-update and always use that version.
+Setting it to a particular version will prevent it from auto-updating and will always use that version.
 
-### `RHSSO_ENDPOINT`
+### `OPENSSL_VERIFY`
 
-URI that points to the realm configured on Red Hat Single Sign-On instance for 3scale Applications (a.k.a. clients in Red Hat Single Sign-On.) 
+**Values:**
+- `0`, `false`: disable peer verification
+- `1`, `true`: enable peer verification
 
-**Example**: `https://rh-sso.example.com:8443/auth/realms/3scale`.
+Controls the OpenSSL Peer Verification. It is off by default, because OpenSSL can't use system certificate store.
+It requires custom certificate bundle and adding it to trusted certificates.
+
+It is recommended to use https://github.com/openresty/lua-nginx-module#lua_ssl_trusted_certificate and point to to
+certificate bundle generated by [export-builtin-trusted-certs](https://github.com/openresty/openresty-devel-utils/blob/master/export-builtin-trusted-certs).
+
+### `APICAST_REPORTING_THREADS`
+
+**Default**: 0
+**Value:**: integer >= 0
+
+Value greater than 0 is going to enable out-of-band reporting to backend.
+This is a new **experimental** feature for increasing performance. Client
+won't see the backend latency and everything will be processed asynchronously.
+This value determines how many asynchronous reports can be running simultaneously
+before the client is throttled by adding latency.
+
+### `APICAST_POLICY_LOAD_PATH`
+
+**Default**: APICAST_DIR/policies
+**Value:**: string\[:<string>\]
+**Example**: ~/apicast/policies:$PWD/policies
+
+Double colon (`:`) separated list of paths where APIcast should look for policies.
+It can be used to first load policies from a development directory or to load examples.
+
+### `APICAST_ENVIRONMENT`
+
+**Default**:
+**Value:**: string\[:<string>\]
+**Example**: production:cloud-hosted
+
+Double colon (`:`) separated list of environments (or paths) APIcast should load.
+It can be used instead of `-e` or `---environment` parameter on the CLI and for example
+stored in the container image as default environment. Any value passed on the CLI overrides this variable.

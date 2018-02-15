@@ -1,0 +1,134 @@
+version: 2
+jobs:
+  s2i-runtime: &S2i
+    docker:
+      - image: docker:stable
+    working_directory: /opt/app-root/apicast
+    environment:
+      S2I_VERSION: "1.1.7-226afa1"
+      DOCKER_COMPOSE_VERSION: "1.16.1"
+      OPENRESTY_VERSION: "1.13.6.1-rover6"
+    steps:
+      - run: apk update && apk add wget make bash curl py-pip git openssh-client
+      - run: |
+          pip install "docker-compose==${DOCKER_COMPOSE_VERSION}"
+          docker-compose version
+      - setup_remote_docker:
+          reusable: true
+          exclusive: false
+      - checkout
+      - run: travis/install-s2i.sh /usr/local/bin # needs to be after checkout because it uses script from the repo
+      - run: make runtime-image
+      - run: make test-runtime-image gateway-logs --keep-going
+  s2i-builder:
+    <<: *S2i
+    steps:
+      - run: apk update && apk add wget make bash curl py-pip git openssh-client
+      - run: |
+          pip install "docker-compose==${DOCKER_COMPOSE_VERSION}"
+          docker-compose version
+      - setup_remote_docker:
+          reusable: true
+          exclusive: false
+      - checkout
+      - run: travis/install-s2i.sh /usr/local/bin # needs to be after checkout because it uses script from the repo
+      - run: make builder-image
+      - run: make test-builder-image gateway-logs --keep-going
+      - run: make prove-docker
+      - run: make lint-schema
+  build:
+    docker:
+      - image: quay.io/3scale/s2i-openresty-centos7:1.13.6.1-rover6
+        environment:
+          TEST_NGINX_BINARY: openresty
+          LUA_BIN_PATH: /opt/app-root/bin
+      - image: redis:3.2.8-alpine
+    working_directory: /opt/app-root/apicast
+    steps:
+      - checkout
+      - run: rm -rf lua_modules
+      - restore_cache:
+          keys:
+            - apicast-rocks-{{ arch }}-{{ checksum "gateway/Roverfile.lock" }}
+            - apicast-rocks-{{ arch }}-{{ .Branch }}
+            - apicast-rocks-{{ arch }}-master
+      - run: make dependencies
+      - save_cache:
+          key: apicast-rocks-{{ arch }}-{{ checksum "gateway/Roverfile.lock" }}
+          paths:
+            - lua_modules
+      - run: mkdir -p tmp/junit
+      - run: $(make rover) exec make busted
+      - restore_cache:
+          keys:
+            - apicast-cpanm-{{ arch }}-{{ checksum "gateway/cpanfile" }}
+            - apicast-cpanm-{{ arch }}-{{ .Branch }}
+            - apicast-cpanm-{{ arch }}-master
+      - run:
+          command: /usr/libexec/s2i/entrypoint make prove
+          environment:
+            JUNIT_OUTPUT_FILE: tmp/junit/prove.xml
+            HARNESS: TAP::Harness::JUnit
+      - save_cache:
+          key: apicast-cpanm-{{ arch }}-{{ checksum "gateway/cpanfile" }}
+          paths:
+            - ~/perl5
+      - store_test_results:
+          path: tmp/junit
+      - store_artifacts:
+          path: tmp/junit
+          destination: junit
+      - run: make doc
+      - store_artifacts:
+          path: doc/lua
+          destination: doc
+
+  deploy:
+    <<: *S2i
+    steps:
+      - run: apk update && apk add wget make bash curl git openssh-client
+      - setup_remote_docker:
+          reusable: true
+          exclusive: false
+      - checkout
+      - run: travis/install-s2i.sh /usr/local/bin # needs to be after checkout because it uses script from the repo
+      - deploy:
+          command: |
+            docker login -u="${DOCKER_USERNAME}" -p="${DOCKER_PASSWORD}" quay.io;
+            make runtime-image push IMAGE_NAME="apicast:${CIRCLE_TAG:-${CIRCLE_BRANCH}}";
+            make builder-image push IMAGE_NAME="apicast:${CIRCLE_TAG:-${CIRCLE_BRANCH}}-builder";
+
+  benchmark:
+    machine: true
+    steps:
+      - checkout
+      - run: IMAGE_TAG=${CIRCLE_TAG:-${CIRCLE_BRANCH}} make benchmark
+      - run: IMAGE_TAG=master make benchmark
+      - store_artifacts:
+          path: tmp/benchmark
+          destination: benchmark
+
+workflows:
+  version: 2
+  build:
+    jobs:
+      - build: &git-tags
+          filters:
+            tags:
+              only: /.*/
+      - s2i-runtime:
+          <<: *git-tags
+      - s2i-builder:
+          <<: *git-tags
+      - deploy:
+          context: org-global
+          requires:
+            - build
+            - s2i-runtime
+            - s2i-builder
+          filters:
+            tags:
+              only: /^v\d+\..+/
+      - benchmark:
+          requires:
+            - deploy
